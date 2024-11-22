@@ -1,6 +1,6 @@
 use std::cmp::PartialEq;
 use std::fmt;
-use std::io::stdin;
+use std::io::{stdin, Stdin};
 use crate::board::Board;
 
 #[derive(Copy, Clone)] // enables the enum to be copied and cloned
@@ -94,15 +94,42 @@ impl Game {
     }
 
     pub(crate) fn main(mut self){
+        let mut stdin = stdin();
         println!("Welcome to battleships!\nIn this game you select a square to shoot\nto see if there is a ship hiding there.\nTry and sink all 5 ships with the lowest shots possible!\n");
         while !self.game_done {
             while !self.valid_input {
 
-                fn shoot(board : &mut Board, valid_input: &mut bool, game_done: &mut bool){
-                    println!("What do you want to do?");
+                fn shoot(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, stdin: &mut Stdin){
+                    println!("Enter coordinate in form x,y:");
+                    let mut coord_str = String::new();
+                    if stdin.read_line(&mut coord_str).is_err() {
+                        // Bail
+                        return;
+                    }   
+                    let parts = coord_str.split(',').filter_map(|part| part.parse::<i32>().ok()).collect::<Vec<i32>>();
+                    if parts.len() != 2 {
+                        return;
+                    }
+                    let coord = Coord::new(parts[0], parts[1]);
+                    board.grid[coord.x as usize][coord.y as usize] = match board.grid[coord.x as usize][coord.y as usize] {
+                        Space::Unknown => {
+                            let mut val = Space::Miss;
+                            for ship in &board.ships {
+                                if ship.is_collide(coord) {
+                                    val = Space::Hit;
+                                    break;
+                                }
+                                
+                            }
+                            val
+                        },
+                        Space::Hit => Space::Hit,
+                        Space::Miss => Space::Miss,
+                        Space::Forfeit => Space::Forfeit,
+                    };
                 }
 
-                fn forfeit(board : &mut Board, valid_input: &mut bool, game_done: &mut bool){
+                fn forfeit(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, _stdin: &mut Stdin){
                     let mut spaces_unhit :Vec<Coord> = Vec::new();
                     for ship in &board.ships {
                         spaces_unhit.extend(ship.coord_list());
@@ -119,25 +146,25 @@ impl Game {
                     *valid_input = true;
                 }
 
-                fn error(board : &mut Board, valid_input: &mut bool, game_done: &mut bool){
+                fn error(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, _stdin: &mut Stdin){
                     println!("What do you want to error?");
                 }
 
                 self.board.print_board();
                 println!("Misses: {}\tHits: {}\nShots fired: {}\nPlease select from the following:\n1. shoot\n2. forfeit", Space::Miss, Space::Hit, self.shots_taken);
-                let mut stdin = stdin();
-                let mut input = &mut String::new();
-                let _ = stdin.read_line(input);
-                let action : fn(&mut Board, &mut bool, &mut bool);
+                let mut input = String::new();
+                let _ = stdin.read_line(&mut input);
+                let action : fn(&mut Board, &mut bool, &mut bool, &mut Stdin);
                 match input.trim() {
                     "1" => action = shoot,
                     "2" => action = forfeit,
                     _ => action = error,
                 }
 
-                action(&mut self.board, &mut self.valid_input, &mut self.game_done);
+                action(&mut self.board, &mut self.valid_input, &mut self.game_done, &mut stdin);
             }
         }
     }
 }
+
 
