@@ -2,8 +2,8 @@ use rand::Rng;
 use crate::ship::Ship;
 
 pub struct Board{ //data for Board implementation
-    grid : [[crate::game::Space;10];10],
-    ships: [Ship;5],
+    pub(crate) grid : [[crate::game::Space;10];10],
+    pub(crate) ships: Vec<Ship>,
 }
 
 impl Board{
@@ -17,13 +17,13 @@ impl Board{
 
     }
 
-    fn ship_gen() -> [Ship;5]{
+    fn ship_gen() -> Vec<Ship> {
 
-        let mut ship_list_output: [Ship;5] = [Ship { origin: crate::game::Coord::new(-1, -1), length: 1, direction: crate::game::Direction::Up }; 5];
+        let mut ship_list_output: Vec<Ship> = Vec::new();
         let lengths = [2, 3, 3, 4, 5];
 
-        fn new_ship(length: i32, list: [Ship;5]) -> Ship {
-            fn new_ship_left_check(coord: crate::game::Coord, size: i32, list: &[Ship; 5]) -> bool {
+        fn new_ship(length: i32, list: &Vec<Ship>) -> Ship {
+            fn new_ship_left_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -42,7 +42,7 @@ impl Board{
                 true
             }
 
-            fn new_ship_right_check(coord: crate::game::Coord, size: i32, list: &[Ship; 5]) -> bool {
+            fn new_ship_right_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -61,7 +61,7 @@ impl Board{
                 true
             }
 
-            fn new_ship_up_check(coord: crate::game::Coord, size: i32, list: &[Ship; 5]) -> bool {
+            fn new_ship_up_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -80,7 +80,7 @@ impl Board{
                 true
             }
 
-            fn new_ship_down_check(coord: crate::game::Coord, size: i32, list: &[Ship; 5]) -> bool {
+            fn new_ship_down_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -119,7 +119,7 @@ impl Board{
                     3 => crate::game::Direction::Up,
                     _ => crate::game::Direction::Right //almost never happens but who fking knows
                 };
-                let mut new_ship_check: fn(crate::game::Coord, i32, &[Ship; 5]) -> bool;
+                let mut new_ship_check: fn(crate::game::Coord, i32, &Vec<Ship>) -> bool;
                 match direction {
                     crate::game::Direction::Up => { new_ship_check = new_ship_up_check; },
                     crate::game::Direction::Down => { new_ship_check = new_ship_down_check; },
@@ -128,16 +128,17 @@ impl Board{
                 }
 
                 output = Ship::new(coord, length, direction);
-                done = new_ship_check(coord, length, &list);
+                done = new_ship_check(coord, length, list);
             }
             output
         }
 
-        for i in 0..4{
-            ship_list_output[i] = new_ship(lengths[i], ship_list_output);
-            // let done = false;
-            // while (!done){
-            //
+        for length in lengths{
+            // println!("{:?}", lengths);
+
+            ship_list_output.push(new_ship(length, &ship_list_output));
+            // for ship in &ship_list_output {
+            //     println!("{} {} {} {} {}",ship.origin.x, ship.origin.y, ship.length, ship.direction, length);
             // }
         }
         ship_list_output
@@ -145,9 +146,11 @@ impl Board{
 
     pub(crate) fn print_board(&self){ //pass by reference because we dont need ownership of it
         // let grid = self.grid.clone();
-        for i in 1..10 {
+
+
+        for i in 0..10 {
             println!("       -----------------------------------------");
-            println!("       | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",self.grid[i][1],self.grid[i][1],self.grid[i][2],self.grid[i][3],self.grid[i][4],self.grid[i][5],self.grid[i][6],self.grid[i][7],self.grid[i][8],self.grid[i][9])
+            println!("       | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",self.grid[i][0],self.grid[i][1],self.grid[i][2],self.grid[i][3],self.grid[i][4],self.grid[i][5],self.grid[i][6],self.grid[i][7],self.grid[i][8],self.grid[i][9])
             //without the above tostring all the grid would be printing as their enums
         }
         println!("       -----------------------------------------");

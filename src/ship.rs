@@ -80,4 +80,39 @@ impl Ship {
         is_collide_check(coord, self.origin, self.length)
 
     }
+
+    pub(crate) fn coord_list(&self) -> Vec<Coord> {
+        let mut output  = Vec::new();
+        let mut temp_coord = self.origin;
+        fn move_left(mut coord: &mut Coord) {
+            coord.x -= 1;
+        };
+        fn move_right(mut coord: &mut Coord) {
+            coord.x += 1;
+        };
+        fn move_up(mut coord: &mut Coord) {
+            coord.y -= 1;
+        };
+        fn move_down(mut coord: &mut Coord) {
+            coord.y += 1;
+        };
+
+        let mut move_func : fn(&mut Coord);
+
+        for _i in 0..self.length {
+
+            output.push(temp_coord);
+
+            match self.direction {
+                Direction::Up => move_func = move_up,
+                Direction::Right => move_func = move_right,
+                Direction::Left => move_func = move_left,
+                Direction::Down => move_func = move_down,
+            }
+
+            move_func(&mut temp_coord);
+
+        }
+        output
+    }
 }
