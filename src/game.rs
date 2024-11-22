@@ -3,7 +3,7 @@ use std::fmt;
 use std::io::{stdin, Stdin};
 use crate::board::Board;
 
-#[derive(Copy, Clone)] // enables the enum to be copied and cloned
+#[derive(Copy, Clone, PartialEq, PartialOrd)] // enables the enum to be copied and cloned
 pub(crate) enum Space {
     Unknown,
     Hit,
@@ -99,69 +99,98 @@ impl Game {
         while !self.game_done {
             while !self.valid_input {
 
-                fn shoot(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, stdin: &mut Stdin){
+                fn shoot(stdin: &mut Stdin, game: &mut Game){
                     println!("Enter coordinate in form x,y:");
                     let mut coord_str = String::new();
                     if stdin.read_line(&mut coord_str).is_err() {
-                        // Bail
+                        println!("Could not read from stdin!");
+                        game.valid_input = false;
                         return;
                     }   
-                    let parts = coord_str.split(',').filter_map(|part| part.parse::<i32>().ok()).collect::<Vec<i32>>();
+                    let parts = coord_str.trim().split(',').filter_map(|part| part.parse::<i32>().ok()).collect::<Vec<i32>>();
                     if parts.len() != 2 {
+                        println!("{} was not a valid format!", coord_str);
+                        game.valid_input = false;
                         return;
                     }
-                    let coord = Coord::new(parts[0], parts[1]);
-                    board.grid[coord.x as usize][coord.y as usize] = match board.grid[coord.x as usize][coord.y as usize] {
-                        Space::Unknown => {
-                            let mut val = Space::Miss;
-                            for ship in &board.ships {
-                                if ship.is_collide(coord) {
-                                    val = Space::Hit;
-                                    break;
-                                }
-                                
+                    let coord = Coord::new(parts[0] - 1, parts[1] - 1);
+                    if game.board.grid[coord.x as usize][coord.y as usize] == Space::Unknown {
+                        let mut val = Space::Miss;
+                        for ship in &game.board.ships {
+                            if ship.is_collide(coord) {
+                                val = Space::Hit;
+                                break;
                             }
-                            val
-                        },
-                        Space::Hit => Space::Hit,
-                        Space::Miss => Space::Miss,
-                        Space::Forfeit => Space::Forfeit,
-                    };
+                        }
+                        match val {
+                            Space::Unknown => {},
+                            Space::Hit => { 
+                                game.board.grid[coord.x as usize][coord.y as usize] = Space::Hit;
+                                game.hits += 1;
+                                println!("Shot Hit!");
+                            },
+                            Space::Miss => { 
+                                game.board.grid[coord.x as usize][coord.y as usize] = Space::Miss;
+                                game.misses += 1;
+                                println!("Shot Missed!");
+                            },
+                            Space::Forfeit => {}
+                        }
+                    }
                 }
 
-                fn forfeit(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, _stdin: &mut Stdin){
+                fn forfeit(_stdin: &mut Stdin, game: &mut Game){
                     let mut spaces_unhit :Vec<Coord> = Vec::new();
-                    for ship in &board.ships {
+                    for ship in &game.board.ships {
                         spaces_unhit.extend(ship.coord_list());
                     }
 
                     for coord in spaces_unhit {
                         // println!("{} {}", coord.x, coord.y);
-                        board.grid[coord.x as usize][coord.y as usize] = Space::Forfeit;
+                        game.board.grid[coord.x as usize][coord.y as usize] = Space::Forfeit;
                     }
 
-                    board.print_board();
+                    game.board.print_board();
                     println!("You lost!");
-                    *game_done = true;
-                    *valid_input = true;
+                    game.game_done = true;
+                    game.valid_input = true;
                 }
 
-                fn error(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, _stdin: &mut Stdin){
+                fn error(_stdin: &mut Stdin, game: &mut Game){
                     println!("What do you want to error?");
                 }
 
+                fn peek(_stdin: &mut Stdin, game: &mut Game) {
+                    let mut buffer = String::from("-----------------------------------------\n");
+                    for y in 0..10 {
+                        for x in 0..10 {
+                            let mut ch = "|   ";
+                            for ship in &game.board.ships {
+                                if ship.is_collide(Coord { x, y }) {
+                                    ch = "| x ";
+                                }
+                            }
+                            buffer += ch;
+                        }
+                        buffer += "|\n";
+                        buffer += "-----------------------------------------\n"
+                    }
+                    println!("Board:\n{}", buffer);
+                }
+
                 self.board.print_board();
-                println!("Misses: {}\tHits: {}\nShots fired: {}\nPlease select from the following:\n1. shoot\n2. forfeit", Space::Miss, Space::Hit, self.shots_taken);
+                println!("Misses: {}\tHits: {}\nShots fired: {}\nPlease select from the following:\n1. shoot\n2. forfeit", self.misses, self.hits, self.shots_taken);
                 let mut input = String::new();
                 let _ = stdin.read_line(&mut input);
-                let action : fn(&mut Board, &mut bool, &mut bool, &mut Stdin);
+                let action : fn(&mut Stdin, &mut Game);
                 match input.trim() {
                     "1" => action = shoot,
                     "2" => action = forfeit,
+                    "help pls" => action = peek,
                     _ => action = error,
                 }
 
-                action(&mut self.board, &mut self.valid_input, &mut self.game_done, &mut stdin);
+                action(&mut stdin, &mut self);
             }
         }
     }
