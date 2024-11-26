@@ -99,11 +99,11 @@ impl Game {
     }
 
 
-    fn get_targets(board : &Board){
-        for i in 0..board.ships.len() {
-
-        }
-    }
+    // fn get_targets(board : &Board){
+    //     for i in 0..board.ships.len() {
+    //
+    //     }
+    // }
 
     pub(crate) fn main(mut self){
         println!("Welcome to battleships!\nIn this game you select a square to shoot\nto see if there is a ship hiding there.\nTry and sink all 5 ships with the lowest shots possible!\n");
