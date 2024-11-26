@@ -1,4 +1,5 @@
 use rand::Rng;
+use crate::game::Coord;
 use crate::ship::Ship;
 
 pub struct Board{ //data for Board implementation
@@ -32,7 +33,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(temp_coord) {
+                        if list[i].is_collide(&temp_coord) {
                             return false;
                         }
                     }
@@ -51,7 +52,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(temp_coord) {
+                        if list[i].is_collide(&temp_coord) {
                             return false;
                         }
                     }
@@ -70,7 +71,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(temp_coord) {
+                        if list[i].is_collide(&temp_coord) {
                             return false;
                         }
                     }
@@ -89,7 +90,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(temp_coord) {
+                        if list[i].is_collide(&temp_coord) {
                             return false;
                         }
                     }
@@ -147,12 +148,36 @@ impl Board{
     pub(crate) fn print_board(&self){ //pass by reference because we dont need ownership of it
         // let grid = self.grid.clone();
 
+        print!("       |");
+        for i in 0..10 {
+            if i != 9 {
+                print!(" ");
+            }
+            print!("{} |", i + 1)
+        }
+        println!();
 
         for i in 0..10 {
-            println!("       -----------------------------------------");
-            println!("       | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",self.grid[i][0],self.grid[i][1],self.grid[i][2],self.grid[i][3],self.grid[i][4],self.grid[i][5],self.grid[i][6],self.grid[i][7],self.grid[i][8],self.grid[i][9])
+            println!("    --------------------------------------------");
+            if i != 9 {
+                print!(" ");
+            }
+            println!("    {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |", i + 1, self.grid[i][0],self.grid[i][1],self.grid[i][2],self.grid[i][3],self.grid[i][4],self.grid[i][5],self.grid[i][6],self.grid[i][7],self.grid[i][8],self.grid[i][9])
             //without the above tostring all the grid would be printing as their enums
         }
-        println!("       -----------------------------------------");
+        println!("    --------------------------------------------");
+    }
+
+    pub(crate) fn check_hit(&self, coord : &Coord) -> bool{
+        let mut output = false;
+        for ship in &self.ships{
+            //println!("{}", ship);
+            if ship.is_collide(coord) {
+                //println!("true");
+                output = true;
+            }
+        }
+        //println!("{}", output);
+        output
     }
 }

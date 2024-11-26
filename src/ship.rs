@@ -1,3 +1,6 @@
+use std::cmp::PartialEq;
+use std::fmt;
+use std::fmt::Formatter;
 use crate::game::{Coord, Direction};
 
 #[derive(Copy, Clone)]
@@ -16,11 +19,11 @@ impl Ship {
         }
     }
 
-    pub(crate) fn is_collide(&self, coord: Coord) -> bool { // collision detection for a coord to see if the ship occupies the provided coord
+    pub(crate) fn is_collide(&self, coord: &Coord) -> bool { // collision detection for a coord to see if the ship occupies the provided coord
 
-        fn is_collide_check_right(coord: Coord, origin: Coord, length: i32) -> bool {
-            let temp_coord = coord;
-            let mut temp_origin = origin;
+        fn is_collide_check_right(coord: &Coord, origin: &Coord, length: i32) -> bool {
+            let temp_coord = *coord;
+            let mut temp_origin = *origin;
             for _i in 0..length {
                 if temp_coord == temp_origin {
                     return true;
@@ -31,9 +34,9 @@ impl Ship {
             false
         }
 
-        fn is_collide_check_down(coord: Coord, origin: Coord, length: i32) -> bool {
-            let temp_coord = coord;
-            let mut temp_origin = origin;
+        fn is_collide_check_down(coord: &Coord, origin: &Coord, length: i32) -> bool {
+            let temp_coord = *coord;
+            let mut temp_origin = *origin;
             for _i in 0..length {
                 if temp_coord == temp_origin {
                     return true;
@@ -44,9 +47,9 @@ impl Ship {
             false
         }
 
-        fn is_collide_check_left(coord: Coord, origin: Coord, length: i32) -> bool {
-            let temp_coord = coord;
-            let mut temp_origin = origin;
+        fn is_collide_check_left(coord: &Coord, origin: &Coord, length: i32) -> bool {
+            let temp_coord = *coord;
+            let mut temp_origin = *origin;
             for _i in 0..length {
                 if temp_coord == temp_origin {
                     return true;
@@ -57,9 +60,9 @@ impl Ship {
             false
         }
 
-        fn is_collide_check_up(coord: Coord, origin: Coord, length: i32) -> bool {
-            let temp_coord = coord;
-            let mut temp_origin = origin;
+        fn is_collide_check_up(coord: &Coord, origin: &Coord, length: i32) -> bool {
+            let temp_coord = *coord;
+            let mut temp_origin = *origin;
             for _i in 0..length {
                 if temp_coord == temp_origin {
                     return true;
@@ -70,14 +73,14 @@ impl Ship {
             false
         }
 
-        let mut is_collide_check : fn(Coord, Coord, i32) -> bool;
+        let mut is_collide_check : fn(&Coord, &Coord, i32) -> bool;
         match self.direction {
             Direction::Up => is_collide_check = is_collide_check_up,
             Direction::Down => is_collide_check = is_collide_check_down,
             Direction::Left => is_collide_check = is_collide_check_left,
             Direction::Right => is_collide_check = is_collide_check_right,
         }
-        is_collide_check(coord, self.origin, self.length)
+        is_collide_check(coord, &self.origin, self.length)
 
     }
 
@@ -114,5 +117,11 @@ impl Ship {
 
         }
         output
+    }
+}
+
+impl fmt::Display for Ship {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "x:{} y:{} dir:{} len:{}", self.origin.x, self.origin.y, self.direction, self.length)
     }
 }
