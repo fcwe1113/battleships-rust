@@ -182,6 +182,15 @@ impl Game {
                             board.grid[row][col] = Space::Unknown;
                         }
 
+                        let win_con = &board.total_ship_length();
+                        // let win_con = &1;
+                        if hits == win_con {
+                            board.print_board();
+                            println!("You win!\nYou took {} shots to win.", shots_taken);
+                            *game_done = true;
+                            *valid_input = true;
+                        }
+
                     } else if input_error {
                         println!("Please enter in the format of: ROW,COLUMN");
                     } else if value_error {

@@ -180,4 +180,12 @@ impl Board{
         //println!("{}", output);
         output
     }
+
+    pub(crate) fn total_ship_length(&self) -> i32{
+        let mut total = 0;
+        for ship in &self.ships {
+            total += ship.length;
+        }
+        total
+    }
 }
