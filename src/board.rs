@@ -3,28 +3,36 @@ use crate::game::Coord;
 use crate::ship::Ship;
 
 pub struct Board{ //data for Board implementation
-    pub(crate) grid : [[crate::game::Space;10];10],
-    pub(crate) ships: Vec<Ship>,
+    pub(crate) grid : [[crate::game::Space;10];10], // a 10 by 10 array holding Space structs
+    pub(crate) ships: Vec<Ship>, // a Vector(essentially java ArrayList) holding the Ship struct
 }
 
 impl Board{
 
-    pub(crate) fn new() -> Board{
+    pub(crate) fn new() -> Board{ // constructor
 
         Board {
-            grid: [[crate::game::Space::Unknown; 10]; 10],
-            ships: Board::ship_gen(),
+            grid: [[crate::game::Space::Unknown; 10]; 10], // create a 10 by 10 array initialized with unknown
+            ships: Board::ship_gen(), // run the ship_gen function to fill the Vector with ships
         }
 
     }
 
+    // the ship gen function, should only be called by Board::new()
     fn ship_gen() -> Vec<Ship> {
 
         let mut ship_list_output: Vec<Ship> = Vec::new();
-        let lengths = [2, 3, 3, 4, 5];
+        let lengths = [2, 3, 3, 4, 5]; // hardcoded ship lengths
 
         fn new_ship(length: i32, list: &Vec<Ship>) -> Ship {
-            fn new_ship_left_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
+
+            // defining 4 check functions for 4 directions
+            // just look at the left function for comments they are essentially the same with minimal changes
+            // main function logic starts below
+
+            // the check function if the newly generated ship is facing left
+            // would be shoved into a var below
+            fn new_ship_left_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -33,7 +41,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(&temp_coord) {
+                        if list[i].is_collide(&temp_coord) { // check each tile of the ship will it take up to see if anythings occupying it
                             return false;
                         }
                     }
@@ -43,7 +51,9 @@ impl Board{
                 true
             }
 
-            fn new_ship_right_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
+            // the check function if the newly generated ship is facing right
+            // would be shoved into a var below
+            fn new_ship_right_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -62,7 +72,9 @@ impl Board{
                 true
             }
 
-            fn new_ship_up_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
+            // the check function if the newly generated ship is facing up
+            // would be shoved into a var below
+            fn new_ship_up_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -81,7 +93,10 @@ impl Board{
                 true
             }
 
-            fn new_ship_down_check(coord: crate::game::Coord, size: i32, list: &Vec<Ship>) -> bool {
+
+            // the check function if the newly generated ship is facing down
+            // would be shoved into a var below
+            fn new_ship_down_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
                 let mut temp_coord = coord;
 
                 for _i in 0..size {
@@ -100,9 +115,10 @@ impl Board{
                 true
             }
 
+            // main function logic starts here
             let mut done: bool = false;
-            let mut output: Ship = Ship {
-                origin: crate::game::Coord { x: -1, y: -1 },
+            let mut output: Ship = Ship { // make a dummy ship to shut the compiler up
+                origin: Coord { x: -1, y: -1 },
                 length,
                 direction: crate::game::Direction::Left,
             };
@@ -112,15 +128,19 @@ impl Board{
                 //both starting coord and direction
                 //the 4 funcs 2 for checking if pos valid or not
                 let mut rng = rand::thread_rng();
-                let coord: crate::game::Coord = crate::game::Coord::new(rng.gen_range(0..10), rng.gen_range(0..10));
+                // randomizing the origin coord of the ship
+                let coord: Coord = Coord::new(rng.gen_range(0..10), rng.gen_range(0..10));
                 let direction: crate::game::Direction = match rng.gen_range(0..4) {
+                    // randomizing the direction of the ship and turn the rng number into a direction enum
                     0 => crate::game::Direction::Right,
                     1 => crate::game::Direction::Down,
                     2 => crate::game::Direction::Left,
                     3 => crate::game::Direction::Up,
                     _ => crate::game::Direction::Right //almost never happens but who fking knows
                 };
-                let mut new_ship_check: fn(crate::game::Coord, i32, &Vec<Ship>) -> bool;
+
+                // this is a variable that stores a function that takes in a Coord struct , a i32 and a Vector holding Ship structs by reference returning a bool
+                let new_ship_check: fn(Coord, i32, &Vec<Ship>) -> bool;
                 match direction {
                     crate::game::Direction::Up => { new_ship_check = new_ship_up_check; },
                     crate::game::Direction::Down => { new_ship_check = new_ship_down_check; },
@@ -128,16 +148,21 @@ impl Board{
                     crate::game::Direction::Right => { new_ship_check = new_ship_right_check; },
                 }
 
+                // make the new Ship with the randomized information
                 output = Ship::new(coord, length, direction);
+                // check the new Ship to see if the placement is valid
                 done = new_ship_check(coord, length, list);
             }
-            output
+            output // returns the ship
         }
 
         for length in lengths{
             // println!("{:?}", lengths);
 
+            // append ships into the newly generated ship list
+            // remember the validity check is in the new_ship() already
             ship_list_output.push(new_ship(length, &ship_list_output));
+
             // for ship in &ship_list_output {
             //     println!("{} {} {} {} {}",ship.origin.x, ship.origin.y, ship.length, ship.direction, length);
             // }
@@ -145,6 +170,7 @@ impl Board{
         ship_list_output
     }
 
+    // print board function
     pub(crate) fn print_board(&self){ //pass by reference because we dont need ownership of it
         // let grid = self.grid.clone();
 
@@ -168,11 +194,12 @@ impl Board{
         println!("    --------------------------------------------");
     }
 
+    // the check if the provided coord has a ship hiding in there function
     pub(crate) fn check_hit(&self, coord : &Coord) -> bool{
         let mut output = false;
         for ship in &self.ships{
             //println!("{}", ship);
-            if ship.is_collide(coord) {
+            if ship.is_collide(coord) { // its just proccing the ship struct's collision check
                 //println!("true");
                 output = true;
             }
@@ -181,6 +208,7 @@ impl Board{
         output
     }
 
+    // total ship length function for the win con
     pub(crate) fn total_ship_length(&self) -> i32{
         let mut total = 0;
         for ship in &self.ships {

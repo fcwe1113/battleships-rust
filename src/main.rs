@@ -15,8 +15,10 @@ fn main() {
     //hv to initialize the grid here
     // let board = Board::new();
     // board.print_board();
-    let mut game = Game::new();
-    game.main();
 
+    //game struct is the game wrapper
+    let game = Game::new();
+    //run the game
+    game.main();
     
 }
