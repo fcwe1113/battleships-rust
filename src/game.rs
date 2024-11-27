@@ -1,10 +1,10 @@
 use std::cmp::PartialEq;
 use std::fmt;
 use std::fmt::Display;
-use std::io::stdin;
+use std::io::{stdin, Stdin};
 use crate::board::Board;
 
-#[derive(Copy, Clone)] // enables the enum to be copied and cloned
+#[derive(Copy, Clone, PartialEq, PartialOrd)] // enables the enum to be copied and cloned
 pub(crate) enum Space {
     Unknown,
     Hit,
@@ -23,13 +23,6 @@ impl Display for Space {
             Space::Forfeit => write!(f, "i"),
             Space::Targeting => write!(f, "⌖"),
         }
-    }
-}
-
-impl PartialEq for Space { // self defining equals function for Space struct
-    fn eq(&self, other: &Self) -> bool {
-        // println!("hi");
-        format!("{}", self) == format!("{}", other) // if a value is just sitting there without a semicolon and is the return type it just returns it
     }
 }
 
@@ -62,7 +55,7 @@ pub(crate) enum Direction {
     Down,
 }
 
-impl Display for Direction {
+impl fmt::Display for Direction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Direction::Left => write!(f, "Left"),
@@ -101,7 +94,7 @@ impl Game {
 
                 //shooting function
                 //to be shoved into action below
-                fn shoot(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, hits: &mut i32, misses: &mut i32, shots_taken: &mut i32) {
+                fn shoot(stdin: &mut Stdin, game: &mut Game) {
                     let mut input_error = false;
                     let mut value_error = false;
                     let mut range_error = false;
@@ -145,8 +138,8 @@ impl Game {
                         let mut valid_confirm = false;
                         let mut confirm = false;
                         while !valid_confirm { // loop back if confirmation not in standard
-                            board.grid[row][col] = Space::Targeting; // assign that tile to show a crosshair
-                            board.print_board();
+                            game.board.grid[row][col] = Space::Targeting; // assign that tile to show a crosshair
+                            game.board.print_board();
                             println!("You sure you want to shoot there?(Y/N)");
                             let mut confirm_input = String::new();
                             stdin().read_line(&mut confirm_input).expect("Error reading input");
@@ -162,25 +155,25 @@ impl Game {
                         }
 
                         if confirm { // run if user says yes
-                            if board.check_hit(&Coord::new(row as i32, col as i32)) { // check if target tile is a hit
-                                board.grid[row][col] = Space::Hit; // if hit set it as hit
-                                *hits += 1; // add up hit counter
+                            if game.board.check_hit(&Coord::new(row as i32, col as i32)) { // check if target tile is a hit
+                                game.board.grid[row][col] = Space::Hit; // if hit set it as hit
+                                *game.hits += 1; // add up hit counter
                             } else { // run if shot missed
-                                board.grid[row][col] = Space::Miss;
-                                *misses += 1;
+                                game.board.grid[row][col] = Space::Miss;
+                                *game.misses += 1;
                             }
-                            *shots_taken += 1;
+                            *game.shots_taken += 1;
                         } else { // if user says no then reset the crosshair
-                            board.grid[row][col] = Space::Unknown;
+                            game.board.grid[row][col] = Space::Unknown;
                         }
 
-                        let win_con = &board.total_ship_length(); // if hit counter reaches total ship length the game is won
+                        let win_con = &game.board.total_ship_length(); // if hit counter reaches total ship length the game is won
                         // let win_con = &1; // debug win con
-                        if hits == win_con {
-                            board.print_board();
-                            println!("You win!\nYou took {} shots to win.", shots_taken);
-                            *game_done = true;
-                            *valid_input = true;
+                        if game.hits == win_con {
+                            game.board.print_board();
+                            println!("You win!\nYou took {} shots to win.", game.shots_taken);
+                            *game.game_done = true;
+                            *game.valid_input = true;
                         }
 
                     } else if input_error {
@@ -196,40 +189,37 @@ impl Game {
 
                 // forfeit function
                 // to be shoved into action below
-                fn forfeit(board : &mut Board, valid_input: &mut bool, game_done: &mut bool, _hits: &mut i32, _misses: &mut i32, _shots_taken: &mut i32){
+                fn forfeit(_stdin: &mut Stdin, game: &mut Game){
                     let mut spaces_unhit :Vec<Coord> = Vec::new();
-                    for ship in &board.ships { // get the list of unhit tiles and shove it into a list
+                    for ship in &game.board.ships {
                         spaces_unhit.extend(ship.coord_list());
                     }
 
                     for coord in spaces_unhit {
                         // println!("{} {}", coord.x, coord.y);
-                        if board.grid[coord.x as usize][coord.y as usize] == Space::Unknown { // change every tile that should be hit but isnt into an i
-                            board.grid[coord.x as usize][coord.y as usize] = Space::Forfeit;
-                        }
+                        game.board.grid[coord.x as usize][coord.y as usize] = Space::Forfeit;
                     }
 
-                    board.print_board();
+                    game.board.print_board();
                     println!("You lost!");
-                    *game_done = true;
-                    *valid_input = true;
+                    game.game_done = true;
+                    game.valid_input = true;
                 }
 
                 // error function
                 // to be shoved into action below
-                fn error(_board : &mut Board, _valid_input: &mut bool, _game_done: &mut bool, _hits: &mut i32, _misses: &mut i32, _shots_taken: &mut i32){
+                fn error(_stdin: &mut Stdin, game: &mut Game){
                     println!("Invalid input");
                 }
 
                 self.board.print_board();
                 println!("Misses: {}\tHits: {}\nShots fired: {}\nPlease select from the following:\n1. shoot\n2. forfeit", Space::Miss, Space::Hit, self.shots_taken);
-                let stdin = stdin();
+                let mut stdin = stdin();
                 let input = &mut String::new();
                 let _ = stdin.read_line(input); // whenever u see a var name starting with _ it tells the compiler that this var is unused
-                // action is a variable that takes in a function that takes in a changeable Board struct by reference, a changeable bool by reference
-                // another changeable bool by reference, a changeable i32 by reference, another changeable i32 by reference, and changeable i32 by reference
-                // that returns nothing
-                let action : fn(&mut Board, &mut bool, &mut bool, &mut i32, &mut i32, &mut i32);
+                // action is a variable that takes in a function that takes in a changeable standard input struct by reference and a
+                // changable Game struct by reference and returns nothing
+                let action : fn(&mut Stdin, &mut Game);
                 match input.trim() {
                     // map in the correct function into the var according to user input
                     // essentially a switch case
@@ -239,7 +229,7 @@ impl Game {
                 }
 
                 // run the selected action
-                action(&mut self.board, &mut self.valid_input, &mut self.game_done, &mut self.hits, &mut self.misses, &mut self.shots_taken);
+                action(&mut stdin, &mut self);
             }
         }
     }
