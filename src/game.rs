@@ -103,7 +103,7 @@ impl Game {
                     let mut col = 11;
 
                     println!("please enter the row and column in the format of : ROW,COLUMN");
-                    stdin().read_line(&mut input).expect("Error reading input"); // read line and print error if error
+                    stdin.read_line(&mut input).expect("Error reading input"); // read line and print error if error
                     let coords : Vec<&str> = input.split(',').collect(); // split read line by , into Vec
                     if coords.len() != 2 {
                         // check if theres 2 things split between ,
@@ -142,7 +142,7 @@ impl Game {
                             game.board.print_board();
                             println!("You sure you want to shoot there?(Y/N)");
                             let mut confirm_input = String::new();
-                            stdin().read_line(&mut confirm_input).expect("Error reading input");
+                            stdin.read_line(&mut confirm_input).expect("Error reading input");
                             if confirm_input.trim().to_lowercase() == "y" {
                                 valid_confirm = true;
                                 confirm = true;
@@ -157,23 +157,23 @@ impl Game {
                         if confirm { // run if user says yes
                             if game.board.check_hit(&Coord::new(row as i32, col as i32)) { // check if target tile is a hit
                                 game.board.grid[row][col] = Space::Hit; // if hit set it as hit
-                                *game.hits += 1; // add up hit counter
+                                game.hits += 1; // add up hit counter
                             } else { // run if shot missed
                                 game.board.grid[row][col] = Space::Miss;
-                                *game.misses += 1;
+                                game.misses += 1;
                             }
-                            *game.shots_taken += 1;
+                            game.shots_taken += 1;
                         } else { // if user says no then reset the crosshair
                             game.board.grid[row][col] = Space::Unknown;
                         }
 
                         let win_con = &game.board.total_ship_length(); // if hit counter reaches total ship length the game is won
                         // let win_con = &1; // debug win con
-                        if game.hits == win_con {
+                        if game.hits == *win_con {
                             game.board.print_board();
                             println!("You win!\nYou took {} shots to win.", game.shots_taken);
-                            *game.game_done = true;
-                            *game.valid_input = true;
+                            game.game_done = true;
+                            game.valid_input = true;
                         }
 
                     } else if input_error {
@@ -208,7 +208,7 @@ impl Game {
 
                 // error function
                 // to be shoved into action below
-                fn error(_stdin: &mut Stdin, game: &mut Game){
+                fn error(_stdin: &mut Stdin, _game: &mut Game){
                     println!("Invalid input");
                 }
 
