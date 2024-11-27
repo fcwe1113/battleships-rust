@@ -1,5 +1,6 @@
 use std::cmp::PartialEq;
 use std::fmt;
+use std::fmt::Display;
 use std::io::{stdin, Stdin};
 use crate::board::Board;
 
@@ -9,16 +10,18 @@ pub(crate) enum Space {
     Hit,
     Miss,
     Forfeit,
+    Targeting,
 }
 
 //tostring method for enums using fmt::display as implementation
-impl fmt::Display for Space {
+impl Display for Space {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Space::Unknown => write!(f, " "),
-            Space::Hit => write!(f, "X"),
-            Space::Miss => write!(f, "O"),
+            Space::Hit => write!(f, "O"),
+            Space::Miss => write!(f, "X"),
             Space::Forfeit => write!(f, "i"),
+            Space::Targeting => write!(f, "⌖"),
         }
     }
 }
@@ -30,7 +33,7 @@ pub(crate) struct Coord { // coord data struct to represent coord in grid
 }
 
 impl Coord {
-    pub(crate) fn new(x: i32, y: i32) -> Coord {
+    pub(crate) fn new(x: i32, y: i32) -> Coord { // essentially a constructor
         Coord { x, y }
     }
 }
@@ -70,7 +73,6 @@ pub struct Game {
     board: Board,
     valid_input: bool,
     game_done: bool,
-    target: Vec<Coord>,
 }
 
 impl Game {
@@ -79,66 +81,114 @@ impl Game {
             hits : 0,
             misses : 0,
             shots_taken: 0,
-            board: Board::new(),
+            board: Board::new(), // runs the constructor for Board
             valid_input: false,
             game_done: false,
-            target: Vec::new(),
         }
     }
 
-
-    fn get_targets(board : &Board){
-        for i in 0..board.ships.len() {
-
-        }
-    }
-
-    pub(crate) fn main(mut self){
-        let mut stdin = stdin();
+    pub(crate) fn main(mut self){ //main game function
         println!("Welcome to battleships!\nIn this game you select a square to shoot\nto see if there is a ship hiding there.\nTry and sink all 5 ships with the lowest shots possible!\n");
-        while !self.game_done {
-            while !self.valid_input {
+        while !self.game_done { //main game loop
+            while !self.valid_input { // check if input valid
 
-                fn shoot(stdin: &mut Stdin, game: &mut Game){
-                    println!("Enter coordinate in form x,y:");
-                    let mut coord_str = String::new();
-                    if stdin.read_line(&mut coord_str).is_err() {
-                        println!("Could not read from stdin!");
-                        game.valid_input = false;
-                        return;
-                    }   
-                    let parts = coord_str.trim().split(',').filter_map(|part| part.parse::<i32>().ok()).collect::<Vec<i32>>();
-                    if parts.len() != 2 {
-                        println!("{} was not a valid format!", coord_str);
-                        game.valid_input = false;
-                        return;
-                    }
-                    let coord = Coord::new(parts[0] - 1, parts[1] - 1);
-                    if game.board.grid[coord.x as usize][coord.y as usize] == Space::Unknown {
-                        let mut val = Space::Miss;
-                        for ship in &game.board.ships {
-                            if ship.is_collide(coord) {
-                                val = Space::Hit;
-                                break;
+                //shooting function
+                //to be shoved into action below
+                fn shoot(stdin: &mut Stdin, game: &mut Game) {
+                    let mut input_error = false;
+                    let mut value_error = false;
+                    let mut range_error = false;
+                    let mut input = String::new();
+                    let mut row = 11;
+                    let mut col = 11;
+
+                    println!("please enter the row and column in the format of : ROW,COLUMN");
+                    stdin().read_line(&mut input).expect("Error reading input"); // read line and print error if error
+                    let coords : Vec<&str> = input.split(',').collect(); // split read line by , into Vec
+                    if coords.len() != 2 {
+                        // check if theres 2 things split between ,
+                        input_error = true;
+                    } else {
+                        row = match coords[0].trim().parse() { // see if splitted contents r numbers
+                            Ok(num) => num,
+                            Err(_) => {value_error = true; 1} // the one is there to prevent an error, it does jack (or i hope it does)
+                        };
+                        col = match coords[1].trim().parse() {
+                            Ok(num) => num,
+                            Err(_) => {value_error = true; 1}
+                        };
+
+                        if !value_error { // see if number is between 1 to 10
+                            if row < 1 || row > 10 {
+                                range_error = true;
+                            } else {
+                                row -= 1; // minus 1 bc arrays start from 0
+                            }
+
+                            if col < 1 || col > 10 {
+                                range_error = true;
+                            } else {
+                                col -= 1;
                             }
                         }
-                        match val {
-                            Space::Unknown => {},
-                            Space::Hit => { 
-                                game.board.grid[coord.x as usize][coord.y as usize] = Space::Hit;
-                                game.hits += 1;
-                                println!("Shot Hit!");
-                            },
-                            Space::Miss => { 
-                                game.board.grid[coord.x as usize][coord.y as usize] = Space::Miss;
-                                game.misses += 1;
-                                println!("Shot Missed!");
-                            },
-                            Space::Forfeit => {}
+                    }
+
+                    if !input_error && !value_error && !range_error { // run if no errors
+                        // println!("row: {}, col: {}", row, col);
+                        let mut valid_confirm = false;
+                        let mut confirm = false;
+                        while !valid_confirm { // loop back if confirmation not in standard
+                            game.board.grid[row][col] = Space::Targeting; // assign that tile to show a crosshair
+                            game.board.print_board();
+                            println!("You sure you want to shoot there?(Y/N)");
+                            let mut confirm_input = String::new();
+                            stdin().read_line(&mut confirm_input).expect("Error reading input");
+                            if confirm_input.trim().to_lowercase() == "y" {
+                                valid_confirm = true;
+                                confirm = true;
+                            } else if confirm_input.trim().to_lowercase() == "n" {
+                                valid_confirm = true;
+                                confirm = false;
+                            } else {
+                                println!("Please enter either Y or N");
+                            }
                         }
+
+                        if confirm { // run if user says yes
+                            if game.board.check_hit(&Coord::new(row as i32, col as i32)) { // check if target tile is a hit
+                                game.board.grid[row][col] = Space::Hit; // if hit set it as hit
+                                *game.hits += 1; // add up hit counter
+                            } else { // run if shot missed
+                                game.board.grid[row][col] = Space::Miss;
+                                *game.misses += 1;
+                            }
+                            *game.shots_taken += 1;
+                        } else { // if user says no then reset the crosshair
+                            game.board.grid[row][col] = Space::Unknown;
+                        }
+
+                        let win_con = &game.board.total_ship_length(); // if hit counter reaches total ship length the game is won
+                        // let win_con = &1; // debug win con
+                        if game.hits == win_con {
+                            game.board.print_board();
+                            println!("You win!\nYou took {} shots to win.", game.shots_taken);
+                            *game.game_done = true;
+                            *game.valid_input = true;
+                        }
+
+                    } else if input_error {
+                        println!("Please enter in the format of: ROW,COLUMN");
+                    } else if value_error {
+                        println!("Please enter numbers for rows and columns");
+                    } else if range_error {
+                        println!("Please enter 0 to 9 for rows and columns");
+                    } else {
+                        println!("lolwtf") // should never happen lmao
                     }
                 }
 
+                // forfeit function
+                // to be shoved into action below
                 fn forfeit(_stdin: &mut Stdin, game: &mut Game){
                     let mut spaces_unhit :Vec<Coord> = Vec::new();
                     for ship in &game.board.ships {
@@ -156,44 +206,32 @@ impl Game {
                     game.valid_input = true;
                 }
 
+                // error function
+                // to be shoved into action below
                 fn error(_stdin: &mut Stdin, game: &mut Game){
-                    println!("What do you want to error?");
-                }
-
-                fn peek(_stdin: &mut Stdin, game: &mut Game) {
-                    let mut buffer = String::from("-----------------------------------------\n");
-                    for y in 0..10 {
-                        for x in 0..10 {
-                            let mut ch = "|   ";
-                            for ship in &game.board.ships {
-                                if ship.is_collide(Coord { x, y }) {
-                                    ch = "| x ";
-                                }
-                            }
-                            buffer += ch;
-                        }
-                        buffer += "|\n";
-                        buffer += "-----------------------------------------\n"
-                    }
-                    println!("Board:\n{}", buffer);
+                    println!("Invalid input");
                 }
 
                 self.board.print_board();
-                println!("Misses: {}\tHits: {}\nShots fired: {}\nPlease select from the following:\n1. shoot\n2. forfeit", self.misses, self.hits, self.shots_taken);
-                let mut input = String::new();
-                let _ = stdin.read_line(&mut input);
+                println!("Misses: {}\tHits: {}\nShots fired: {}\nPlease select from the following:\n1. shoot\n2. forfeit", Space::Miss, Space::Hit, self.shots_taken);
+                let mut stdin = stdin();
+                let input = &mut String::new();
+                let _ = stdin.read_line(input); // whenever u see a var name starting with _ it tells the compiler that this var is unused
+                // action is a variable that takes in a function that takes in a changeable standard input struct by reference and a
+                // changable Game struct by reference and returns nothing
                 let action : fn(&mut Stdin, &mut Game);
                 match input.trim() {
+                    // map in the correct function into the var according to user input
+                    // essentially a switch case
                     "1" => action = shoot,
                     "2" => action = forfeit,
-                    "help pls" => action = peek,
                     _ => action = error,
                 }
 
+                // run the selected action
                 action(&mut stdin, &mut self);
             }
         }
     }
 }
-
 
