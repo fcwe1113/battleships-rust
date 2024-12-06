@@ -40,10 +40,7 @@ impl Coord {
 
 impl PartialEq for Coord { // equivalent to .equals() in C#
     fn eq(&self, other: &Self) -> bool {
-        if self.x == other.x && self.y == other.y {
-            return true;
-        }
-        false
+        self.x == other.x && self.y == other.y
     }
 }
 
@@ -55,7 +52,7 @@ pub(crate) enum Direction {
     Down,
 }
 
-impl fmt::Display for Direction {
+impl Display for Direction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Direction::Left => write!(f, "Left"),
@@ -137,7 +134,9 @@ impl Game {
                         // println!("row: {}, col: {}", row, col);
                         let mut valid_confirm = false;
                         let mut confirm = false;
+                        let mut original_space: Space = Space::Unknown;
                         while !valid_confirm { // loop back if confirmation not in standard
+                            original_space = game.board.grid[row][col];
                             game.board.grid[row][col] = Space::Targeting; // assign that tile to show a crosshair
                             game.board.print_board();
                             println!("You sure you want to shoot there?(Y/N)");
@@ -164,7 +163,7 @@ impl Game {
                             }
                             game.shots_taken += 1;
                         } else { // if user says no then reset the crosshair
-                            game.board.grid[row][col] = Space::Unknown;
+                            game.board.grid[row][col] = original_space;
                         }
 
                         let win_con = &game.board.total_ship_length(); // if hit counter reaches total ship length the game is won

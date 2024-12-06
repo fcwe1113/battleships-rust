@@ -195,6 +195,8 @@ impl Board{
     }
 
     // the check if the provided coord has a ship hiding in there function
+    // pure function here
+    // it takes variables, gives an output according to the input, no randomizing or user input inside
     pub(crate) fn check_hit(&self, coord : &Coord) -> bool{
         let mut output = false;
         for ship in &self.ships{
