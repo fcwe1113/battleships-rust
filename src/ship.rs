@@ -102,6 +102,7 @@ impl Ship {
     }
 
     // function that returns a list of tiles that has a ship in it
+    // in itself is a pure function
     pub(crate) fn coord_list(&self) -> Vec<Coord> {
         let mut output  = Vec::new();
         let mut temp_coord = self.origin;

@@ -157,22 +157,16 @@ impl Board{
         }
 
         for length in lengths{
-            // println!("{:?}", lengths);
 
             // append ships into the newly generated ship list
             // remember the validity check is in the new_ship() already
             ship_list_output.push(new_ship(length, &ship_list_output));
-
-            // for ship in &ship_list_output {
-            //     println!("{} {} {} {} {}",ship.origin.x, ship.origin.y, ship.length, ship.direction, length);
-            // }
         }
         ship_list_output
     }
 
     // print board function
     pub(crate) fn print_board(&self){ //pass by reference because we dont need ownership of it
-        // let grid = self.grid.clone();
 
         print!("       |");
         for i in 0..10 {
@@ -200,13 +194,10 @@ impl Board{
     pub(crate) fn check_hit(&self, coord : &Coord) -> bool{
         let mut output = false;
         for ship in &self.ships{
-            //println!("{}", ship);
             if ship.is_collide(coord) { // its just proccing the ship struct's collision check
-                //println!("true");
                 output = true;
             }
         }
-        //println!("{}", output);
         output
     }
 

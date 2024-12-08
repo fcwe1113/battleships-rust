@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::io::{stdin, Stdin};
 use crate::board::Board;
 
-#[derive(Copy, Clone, PartialEq, PartialOrd)] // enables the enum to be copied and cloned
+#[derive(Copy, Clone, PartialEq)] // enables the enum to be copied and cloned and compared
 pub(crate) enum Space {
     Unknown,
     Hit,
@@ -131,7 +131,6 @@ impl Game {
                     }
 
                     if !input_error && !value_error && !range_error { // run if no errors
-                        // println!("row: {}, col: {}", row, col);
                         let mut valid_confirm = false;
                         let mut confirm = false;
                         let mut original_space: Space = Space::Unknown;
@@ -195,7 +194,6 @@ impl Game {
                     }
 
                     for coord in spaces_unhit {
-                        // println!("{} {}", coord.x, coord.y);
                         game.board.grid[coord.x as usize][coord.y as usize] = Space::Forfeit;
                     }
 
@@ -216,6 +214,7 @@ impl Game {
                 let mut stdin = stdin();
                 let input = &mut String::new();
                 let _ = stdin.read_line(input); // whenever u see a var name starting with _ it tells the compiler that this var is unused
+
                 // action is a variable that takes in a function that takes in a changeable standard input struct by reference and a
                 // changable Game struct by reference and returns nothing
                 let action : fn(&mut Stdin, &mut Game);
@@ -224,7 +223,7 @@ impl Game {
                     // essentially a switch case
                     "1" => action = shoot,
                     "2" => action = forfeit,
-                    _ => action = error,
+                    _ => action = error, // _ in this case means the default case in a switch statement
                 }
 
                 // run the selected action
