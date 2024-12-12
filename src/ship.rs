@@ -18,7 +18,7 @@ impl Ship {
         }
     }
 
-    pub(crate) fn is_collide(&self, coord: &Coord) -> bool { // collision detection for a coord to see if the ship occupies the provided coord
+    pub(crate) fn is_collide(self_ship: &Ship, coord: &Coord) -> bool { // collision detection for a coord to see if the ship occupies the provided coord
 
         // defining 4 functions for checks of the 4 direction the ship can face
         // 1 will be selected to be shoved into a variable below
@@ -89,7 +89,7 @@ impl Ship {
 
         // this is a var that holds a function that takes in a Coord struct passed by reference, another Coord struct passed by reference, and an i32 that returns a bool
         let is_collide_check : fn(&Coord, &Coord, i32) -> bool;
-        match self.direction { // mapping the direction to fill in the var with the correct function to run
+        match self_ship.direction { // mapping the direction to fill in the var with the correct function to run
             Direction::Up => is_collide_check = is_collide_check_up,
             Direction::Down => is_collide_check = is_collide_check_down,
             Direction::Left => is_collide_check = is_collide_check_left,
@@ -97,7 +97,7 @@ impl Ship {
         }
 
         // run the function
-        is_collide_check(coord, &self.origin, self.length)
+        is_collide_check(coord, &self_ship.origin, self_ship.length)
 
     }
 

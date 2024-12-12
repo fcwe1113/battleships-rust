@@ -24,6 +24,7 @@ impl Board{
         let mut ship_list_output: Vec<Ship> = Vec::new();
         let lengths = [2, 3, 3, 4, 5]; // hardcoded ship lengths
 
+        // this is now a pure function
         fn new_ship(length: i32, list: &Vec<Ship>) -> Ship {
 
             // defining 4 check functions for 4 directions
@@ -41,7 +42,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(&temp_coord) { // check each tile of the ship will it take up to see if anythings occupying it
+                        if Ship::is_collide(&list[i], &temp_coord) { // check each tile of the ship will it take up to see if anythings occupying it
                             return false;
                         }
                     }
@@ -62,7 +63,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(&temp_coord) {
+                        if Ship::is_collide(&list[i], &temp_coord) {
                             return false;
                         }
                     }
@@ -83,7 +84,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(&temp_coord) {
+                        if Ship::is_collide(&list[i], &temp_coord) {
                             return false;
                         }
                     }
@@ -105,7 +106,7 @@ impl Board{
                     }
 
                     for i in 0..list.len() {
-                        if list[i].is_collide(&temp_coord) {
+                        if Ship::is_collide(&list[i], &temp_coord) {
                             return false;
                         }
                     }
@@ -194,7 +195,7 @@ impl Board{
     pub(crate) fn check_hit(&self, coord : &Coord) -> bool{
         let mut output = false;
         for ship in &self.ships{
-            if ship.is_collide(coord) { // its just proccing the ship struct's collision check
+            if Ship::is_collide(ship, coord) { // its just proccing the ship struct's collision check
                 output = true;
             }
         }
