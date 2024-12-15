@@ -33,10 +33,10 @@ impl Board{
 
             // the check function if the newly generated ship is facing left
             // would be shoved into a var below
-            fn new_ship_left_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
-                let mut temp_coord = coord;
+            fn new_ship_left_check(ship: Ship, list: &Vec<Ship>) -> bool {
+                let mut temp_coord = ship.origin;
 
-                for _i in 0..size {
+                for _i in 0..ship.length {
                     if temp_coord.x < 0 {
                         return false;
                     }
@@ -54,10 +54,10 @@ impl Board{
 
             // the check function if the newly generated ship is facing right
             // would be shoved into a var below
-            fn new_ship_right_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
-                let mut temp_coord = coord;
+            fn new_ship_right_check(ship: Ship, list: &Vec<Ship>) -> bool {
+                let mut temp_coord = ship.origin;
 
-                for _i in 0..size {
+                for _i in 0..ship.length {
                     if temp_coord.x > 9 {
                         return false;
                     }
@@ -75,10 +75,10 @@ impl Board{
 
             // the check function if the newly generated ship is facing up
             // would be shoved into a var below
-            fn new_ship_up_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
-                let mut temp_coord = coord;
+            fn new_ship_up_check(ship: Ship, list: &Vec<Ship>) -> bool {
+                let mut temp_coord = ship.origin;
 
-                for _i in 0..size {
+                for _i in 0..ship.length {
                     if temp_coord.y < 0 {
                         return false;
                     }
@@ -97,10 +97,10 @@ impl Board{
 
             // the check function if the newly generated ship is facing down
             // would be shoved into a var below
-            fn new_ship_down_check(coord: Coord, size: i32, list: &Vec<Ship>) -> bool {
-                let mut temp_coord = coord;
+            fn new_ship_down_check(ship: Ship, list: &Vec<Ship>) -> bool {
+                let mut temp_coord = ship.origin;
 
-                for _i in 0..size {
+                for _i in 0..ship.length {
                     if temp_coord.y > 9 {
                         return false;
                     }
@@ -141,7 +141,7 @@ impl Board{
                 };
 
                 // this is a variable that stores a function that takes in a Coord struct , a i32 and a Vector holding Ship structs by reference returning a bool
-                let new_ship_check: fn(Coord, i32, &Vec<Ship>) -> bool;
+                let new_ship_check: fn(Ship, &Vec<Ship>) -> bool;
                 match direction {
                     crate::game::Direction::Up => { new_ship_check = new_ship_up_check; },
                     crate::game::Direction::Down => { new_ship_check = new_ship_down_check; },
@@ -152,7 +152,7 @@ impl Board{
                 // make the new Ship with the randomized information
                 output = Ship::new(coord, length, direction);
                 // check the new Ship to see if the placement is valid
-                done = new_ship_check(coord, length, list);
+                done = new_ship_check(output, list);
             }
             output // returns the ship
         }
