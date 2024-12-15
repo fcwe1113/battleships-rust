@@ -116,7 +116,7 @@ impl Board{
                 true
             }
 
-            // main function logic starts here
+            // main function logic of new_ship starts here
             let mut done: bool = false;
             let mut output: Ship = Ship { // make a dummy ship to shut the compiler up
                 origin: Coord { x: -1, y: -1 },
@@ -157,6 +157,7 @@ impl Board{
             output // returns the ship
         }
 
+        // main function logic of ship_gen
         for length in lengths{
 
             // append ships into the newly generated ship list
